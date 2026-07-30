@@ -37,6 +37,7 @@ dependencies:
   google_fonts: ^8.2.0
   flutter_volume_controller: ^2.0.1
   sound_mode_advanced: ^4.0.0
+  google_mobile_ads: ^9.0.0
 
 dev_dependencies:
   flutter_test:

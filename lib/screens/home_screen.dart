@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../providers/app_state.dart';
 import '../models/profile.dart';
 import '../widgets/app_drawer.dart';
+import '../widgets/ad_banner_widget.dart';
 import 'profile_options_dialog.dart';
 import 'app_settings_screen.dart';
 import 'scheduler_screen.dart';
@@ -273,37 +274,8 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
 
-              // Persistent Sponsored Content Footer Banner
-              Container(
-                height: 50,
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.secondaryContainer,
-                  border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'SPONSORED CONTENT',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        letterSpacing: 1.2,
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 32,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.outlineVariant,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Persistent Sponsored Content Ad Banner (AdMob / AdSense)
+              const AdBannerWidget(),
             ],
           ),
           floatingActionButton: Padding(
