@@ -15,15 +15,15 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
 
-  // Google Mobile Ads official test Banner Ad Unit IDs
-  static const String _testAndroidAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
+  // Google Mobile Ads (AdMob / AdSense) Banner Ad Unit IDs
+  static const String _liveAndroidAdUnitId = 'ca-app-pub-7338989922918066/2618394205';
   static const String _testIosAdUnitId = 'ca-app-pub-3940256099942544/2934735716';
 
   String get _adUnitId {
     if (widget.customAdUnitId != null && widget.customAdUnitId!.isNotEmpty) {
       return widget.customAdUnitId!;
     }
-    return defaultTargetPlatform == TargetPlatform.iOS ? _testIosAdUnitId : _testAndroidAdUnitId;
+    return defaultTargetPlatform == TargetPlatform.iOS ? _testIosAdUnitId : _liveAndroidAdUnitId;
   }
 
   @override
