@@ -1,0 +1,50 @@
+import 'package:flutter/material.dart';
+import 'theme/app_theme.dart';
+import 'providers/app_state.dart';
+import 'screens/home_screen.dart';
+
+void main() {
+  runApp(const ProfileSelectorApp());
+}
+
+class ProfileSelectorApp extends StatefulWidget {
+  const ProfileSelectorApp({super.key});
+
+  @override
+  State<ProfileSelectorApp> createState() => _ProfileSelectorAppState();
+}
+
+class _ProfileSelectorAppState extends State<ProfileSelectorApp> {
+  final AppState _appState = AppState();
+
+  @override
+  void dispose() {
+    _appState.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: _appState,
+      builder: (context, _) {
+        return MaterialApp(
+          title: 'Profile Selector',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: _appState.themeMode,
+          builder: (context, child) {
+            return MediaQuery(
+              data: MediaQuery.of(context).copyWith(
+                textScaler: TextScaler.linear(_appState.fontScale),
+              ),
+              child: child!,
+            );
+          },
+          home: HomeScreen(appState: _appState),
+        );
+      },
+    );
+  }
+}
