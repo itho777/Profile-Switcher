@@ -44,12 +44,6 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             title: const Text('Profile Settings', style: TextStyle(fontWeight: FontWeight.bold)),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {},
-              ),
-            ],
           ),
           body: SingleChildScrollView(
             child: Column(

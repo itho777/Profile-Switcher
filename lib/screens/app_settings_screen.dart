@@ -179,7 +179,7 @@ class AppSettingsScreen extends StatelessWidget {
                     children: [
                       ListTile(
                         title: const Text('Version'),
-                        subtitle: const Text('4.2.0-stable (Build 1204)'),
+                        subtitle: const Text('1.0.0-beta.2 (Build 2)'),
                         trailing: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -256,7 +256,7 @@ class AppSettingsScreen extends StatelessWidget {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Built by the Lumia Modern Core Team in Helsinki. Thank you for using our product.',
+                              'Built by boinkboink inc. in Indonesia. Thank you for using our product.',
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
                               ),

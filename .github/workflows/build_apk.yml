@@ -36,6 +36,12 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
+      - name: Set up Android NDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install required Android NDK
+        run: sdkmanager "ndk;27.0.12077973" --sdk_root=$ANDROID_HOME
+
       - name: Build Android Debug APK
         run: flutter build apk --debug --no-tree-shake-icons
 

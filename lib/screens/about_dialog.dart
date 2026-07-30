@@ -55,7 +55,7 @@ class AboutAppDialog extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'NOKIA NOSTALGIA LABS',
+                          'BOINKBOINK INC.',
                           style: TextStyle(
                             fontSize: 10,
                             letterSpacing: 1.2,
@@ -65,7 +65,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Profile Selector Pro',
+                          'Profile Switcher',
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
@@ -96,7 +96,7 @@ class AboutAppDialog extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        '1.0.4',
+                        '1.0.0-beta.2',
                         style: TextStyle(
                           fontWeight: FontWeight.bold,
                           color: theme.colorScheme.primary,
@@ -118,7 +118,7 @@ class AboutAppDialog extends StatelessWidget {
                       Icon(Icons.verified, size: 18, color: theme.colorScheme.primary),
                       const SizedBox(width: 6),
                       Text(
-                        'Official Nokia Nostalgia Release',
+                        'Official Release — boinkboink inc.',
                         style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
