@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_volume_controller/flutter_volume_controller.dart';
 import '../models/profile.dart';
 import '../models/schedule_item.dart';
 
@@ -16,6 +17,10 @@ class AppState extends ChangeNotifier {
 
   bool _ignoreBatteryOptimization = false;
   bool get ignoreBatteryOptimization => _ignoreBatteryOptimization;
+
+  // Hardware integration state
+  bool _hardwareSyncEnabled = true;
+  bool get hardwareSyncEnabled => _hardwareSyncEnabled;
 
   // Timed profile state
   Profile? _timedProfile;
@@ -140,11 +145,21 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleHardwareSync(bool val) {
+    _hardwareSyncEnabled = val;
+    if (_hardwareSyncEnabled) {
+      _applyHardwareSettings(activeProfile);
+    }
+    notifyListeners();
+  }
+
   void activateProfile(String profileId) {
     _cancelTimedActivation();
     for (var p in _profiles) {
       p.isActive = (p.id == profileId);
     }
+    final active = activeProfile;
+    _applyHardwareSettings(active);
     notifyListeners();
   }
 
@@ -194,6 +209,7 @@ class AppState extends ChangeNotifier {
     final index = _profiles.indexWhere((p) => p.id == active.id);
     if (index != -1) {
       _profiles[index] = _profiles[index].copyWith(ringtoneVolume: vol);
+      _setHardwareVolume(AudioStream.ring, vol / 100.0);
       notifyListeners();
     }
   }
@@ -212,6 +228,7 @@ class AppState extends ChangeNotifier {
     final index = _profiles.indexWhere((p) => p.id == active.id);
     if (index != -1) {
       _profiles[index] = _profiles[index].copyWith(messageVolume: vol);
+      _setHardwareVolume(AudioStream.notification, vol / 100.0);
       notifyListeners();
     }
   }
@@ -226,11 +243,34 @@ class AppState extends ChangeNotifier {
     _fontSizeIndex = 2;
     _pushNotifications = true;
     _ignoreBatteryOptimization = false;
+    _hardwareSyncEnabled = true;
     _cancelTimedActivation();
     for (var p in _profiles) {
       p.isActive = (p.id == 'normal');
     }
+    _applyHardwareSettings(activeProfile);
     notifyListeners();
+  }
+
+  // Hardware Native OS Integration
+  Future<void> _applyHardwareSettings(Profile profile) async {
+    if (!_hardwareSyncEnabled) return;
+    try {
+      final ringVol = profile.ringtoneVolume / 100.0;
+      final notifVol = profile.messageVolume / 100.0;
+
+      await FlutterVolumeController.setVolume(ringVol, stream: AudioStream.ring);
+      await FlutterVolumeController.setVolume(notifVol, stream: AudioStream.notification);
+    } catch (_) {
+      // Ignored if desktop/emulator doesn't support physical audio stream controls
+    }
+  }
+
+  Future<void> _setHardwareVolume(AudioStream stream, double volume) async {
+    if (!_hardwareSyncEnabled) return;
+    try {
+      await FlutterVolumeController.setVolume(volume, stream: stream);
+    } catch (_) {}
   }
 
   @override

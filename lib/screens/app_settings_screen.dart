@@ -137,6 +137,14 @@ class AppSettingsScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       SwitchListTile(
+                        secondary: Icon(Icons.phonelink_setup, color: theme.colorScheme.primary),
+                        title: const Text('Sync OS Hardware Volume'),
+                        subtitle: const Text('Automatically sets physical device ringtone & notification volume'),
+                        value: appState.hardwareSyncEnabled,
+                        onChanged: (val) => appState.toggleHardwareSync(val),
+                      ),
+                      const Divider(height: 1, indent: 56),
+                      SwitchListTile(
                         secondary: Icon(Icons.notifications, color: theme.colorScheme.primary),
                         title: const Text('Push Notifications'),
                         subtitle: const Text('Alerts, badges, and sounds'),
