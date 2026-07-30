@@ -9,47 +9,72 @@ on:
     branches: [ main ]
   workflow_dispatch:
 
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
 permissions:
   contents: write
 
 jobs:
   build:
+    name: Build Android APK
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Java 17
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
-          cache: 'gradle'
+          java-version: '21'
 
-      - name: Set up Flutter SDK
-        id: flutter
+      - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: 'stable'
           cache: true
 
-      - name: Write local.properties
-        run: |
-          FLUTTER_SDK_PATH=$(flutter --print-flutter-root)
-          echo "flutter.sdk=${FLUTTER_SDK_PATH}" > android/local.properties
-          echo "sdk.dir=${ANDROID_HOME}" >> android/local.properties
-          echo "--- local.properties ---"
-          cat android/local.properties
+      - name: Configure Flutter JDK
+        run: flutter config --jdk-dir $JAVA_HOME
 
-      - name: Accept Android SDK licenses
-        run: yes | sdkmanager --licenses || true
+      - name: Install Android SDK 36
+        run: |
+          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --install "platforms;android-36" || true
+
+      - name: Prepare local.properties
+        run: |
+          touch android/local.properties
+          echo "flutter.minSdkVersion=21" >> android/local.properties
 
       - name: Install dependencies
         run: flutter pub get
 
       - name: Build Android Debug APK
-        run: flutter build apk --debug --no-tree-shake-icons
+        id: build_apk
+        run: flutter build apk --debug 2>&1 | tee /tmp/flutter_build.log; exit ${PIPESTATUS[0]}
+
+      - name: Dump build log on failure
+        if: failure()
+        run: |
+          echo "## ❌ Flutter Build Error" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          grep -E -A3 "(error:|FAILURE|Exception|Caused by|BUILD FAILED|What went wrong|> Task|Could not)" /tmp/flutter_build.log | tail -120 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Last 100 lines of raw log:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          tail -100 /tmp/flutter_build.log >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload build log artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-build-log
+          path: /tmp/flutter_build.log
+          retention-days: 7
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
