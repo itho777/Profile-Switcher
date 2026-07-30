@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "com.profileselector.profile_selector_app"
-    compileSdk = 36
+    compileSdk = 35
     ndkVersion = "27.0.12077973"
 
     compileOptions {
@@ -35,9 +35,7 @@ android {
 }
 
 kotlin {
-    compilerOptions {
-        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
-    }
+    jvmToolchain(17)
 }
 
 flutter {
