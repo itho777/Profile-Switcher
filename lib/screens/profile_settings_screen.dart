@@ -132,7 +132,7 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       ),
                       const Divider(height: 1, indent: 56),
 
-                      // Volume Slider Item
+                      // Ringtone Volume Slider Item
                       Padding(
                         padding: const EdgeInsets.all(16.0),
                         child: Column(
@@ -169,6 +169,19 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             ),
                           ],
                         ),
+                      ),
+                      const Divider(height: 1, indent: 56),
+
+                      // Ringtone Vibration Switch
+                      SwitchListTile(
+                        secondary: Icon(Icons.vibration, color: theme.colorScheme.primary),
+                        title: const Text('Ringtone Vibration', style: TextStyle(fontWeight: FontWeight.w500)),
+                        subtitle: const Text('Vibrate on incoming calls'),
+                        value: activeProfile.isRingtoneVibrate,
+                        activeThumbColor: theme.colorScheme.primary,
+                        onChanged: (val) {
+                          appState.updateActiveRingtoneVibrate(val);
+                        },
                       ),
                       const Divider(height: 1, indent: 56),
 
@@ -258,6 +271,19 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                             ),
                           ],
                         ),
+                      ),
+                      const Divider(height: 1, indent: 56),
+
+                      // Message Alert Vibration Switch
+                      SwitchListTile(
+                        secondary: Icon(Icons.vibration, color: theme.colorScheme.primary),
+                        title: const Text('Message Alert Vibration', style: TextStyle(fontWeight: FontWeight.w500)),
+                        subtitle: const Text('Vibrate on incoming messages'),
+                        value: activeProfile.isMessageVibrate,
+                        activeThumbColor: theme.colorScheme.primary,
+                        onChanged: (val) {
+                          appState.updateActiveMessageVibrate(val);
+                        },
                       ),
                     ],
                   ),

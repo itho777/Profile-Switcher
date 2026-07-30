@@ -10,8 +10,11 @@ class Profile {
   final int messageVolume; // 0-100
   final String ringtoneName;
   final String messageToneName;
-  final bool isVibrate;
+  final bool isRingtoneVibrate;
+  final bool isMessageVibrate;
   bool isActive;
+
+  bool get isVibrate => isRingtoneVibrate || isMessageVibrate;
 
   Profile({
     required this.id,
@@ -23,7 +26,8 @@ class Profile {
     this.messageVolume = 60,
     this.ringtoneName = 'Nokia Tune',
     this.messageToneName = 'Message 2 (Default)',
-    this.isVibrate = true,
+    this.isRingtoneVibrate = true,
+    this.isMessageVibrate = true,
     this.isActive = false,
   });
 
@@ -37,7 +41,8 @@ class Profile {
     int? messageVolume,
     String? ringtoneName,
     String? messageToneName,
-    bool? isVibrate,
+    bool? isRingtoneVibrate,
+    bool? isMessageVibrate,
     bool? isActive,
   }) {
     return Profile(
@@ -50,7 +55,8 @@ class Profile {
       messageVolume: messageVolume ?? this.messageVolume,
       ringtoneName: ringtoneName ?? this.ringtoneName,
       messageToneName: messageToneName ?? this.messageToneName,
-      isVibrate: isVibrate ?? this.isVibrate,
+      isRingtoneVibrate: isRingtoneVibrate ?? this.isRingtoneVibrate,
+      isMessageVibrate: isMessageVibrate ?? this.isMessageVibrate,
       isActive: isActive ?? this.isActive,
     );
   }

@@ -40,6 +40,8 @@ class AppState extends ChangeNotifier {
       activeIcon: Icons.volume_up,
       ringtoneVolume: 100,
       messageVolume: 100,
+      isRingtoneVibrate: true,
+      isMessageVibrate: true,
     ),
     Profile(
       id: 'normal',
@@ -50,6 +52,8 @@ class AppState extends ChangeNotifier {
       isActive: true,
       ringtoneVolume: 75,
       messageVolume: 60,
+      isRingtoneVibrate: true,
+      isMessageVibrate: true,
     ),
     Profile(
       id: 'meeting',
@@ -59,6 +63,8 @@ class AppState extends ChangeNotifier {
       activeIcon: Icons.groups,
       ringtoneVolume: 20,
       messageVolume: 20,
+      isRingtoneVibrate: true,
+      isMessageVibrate: true,
     ),
     Profile(
       id: 'silent',
@@ -68,6 +74,8 @@ class AppState extends ChangeNotifier {
       activeIcon: Icons.notifications_off,
       ringtoneVolume: 0,
       messageVolume: 0,
+      isRingtoneVibrate: false,
+      isMessageVibrate: false,
     ),
     Profile(
       id: 'pager',
@@ -77,6 +85,8 @@ class AppState extends ChangeNotifier {
       activeIcon: Icons.cell_tower,
       ringtoneVolume: 80,
       messageVolume: 80,
+      isRingtoneVibrate: true,
+      isMessageVibrate: true,
     ),
     Profile(
       id: 'discreet',
@@ -86,6 +96,8 @@ class AppState extends ChangeNotifier {
       activeIcon: Icons.vibration,
       ringtoneVolume: 30,
       messageVolume: 30,
+      isRingtoneVibrate: false,
+      isMessageVibrate: true,
     ),
   ];
 
@@ -214,6 +226,15 @@ class AppState extends ChangeNotifier {
     }
   }
 
+  void updateActiveRingtoneVibrate(bool val) {
+    final active = activeProfile;
+    final index = _profiles.indexWhere((p) => p.id == active.id);
+    if (index != -1) {
+      _profiles[index] = _profiles[index].copyWith(isRingtoneVibrate: val);
+      notifyListeners();
+    }
+  }
+
   void updateActiveMessageTone(String name) {
     final active = activeProfile;
     final index = _profiles.indexWhere((p) => p.id == active.id);
@@ -229,6 +250,15 @@ class AppState extends ChangeNotifier {
     if (index != -1) {
       _profiles[index] = _profiles[index].copyWith(messageVolume: vol);
       _setHardwareVolume(AudioStream.notification, vol / 100.0);
+      notifyListeners();
+    }
+  }
+
+  void updateActiveMessageVibrate(bool val) {
+    final active = activeProfile;
+    final index = _profiles.indexWhere((p) => p.id == active.id);
+    if (index != -1) {
+      _profiles[index] = _profiles[index].copyWith(isMessageVibrate: val);
       notifyListeners();
     }
   }
@@ -261,9 +291,7 @@ class AppState extends ChangeNotifier {
 
       await FlutterVolumeController.setVolume(ringVol, stream: AudioStream.ring);
       await FlutterVolumeController.setVolume(notifVol, stream: AudioStream.notification);
-    } catch (_) {
-      // Ignored if desktop/emulator doesn't support physical audio stream controls
-    }
+    } catch (_) {}
   }
 
   Future<void> _setHardwareVolume(AudioStream stream, double volume) async {
