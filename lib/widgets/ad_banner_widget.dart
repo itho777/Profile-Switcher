@@ -14,12 +14,14 @@ class AdBannerWidget extends StatefulWidget {
 class _AdBannerWidgetState extends State<AdBannerWidget> {
   BannerAd? _bannerAd;
   bool _isAdLoaded = false;
+  bool _isUsingFallback = false;
 
-  // Google Mobile Ads (AdMob / AdSense) Banner Ad Unit IDs
+  // Google Mobile Ads Live & Test Unit IDs
   static const String _liveAndroidAdUnitId = 'ca-app-pub-7338989922918066/2618394205';
+  static const String _testAndroidAdUnitId = 'ca-app-pub-3940256099942544/6300978111';
   static const String _testIosAdUnitId = 'ca-app-pub-3940256099942544/2934735716';
 
-  String get _adUnitId {
+  String get _primaryAdUnitId {
     if (widget.customAdUnitId != null && widget.customAdUnitId!.isNotEmpty) {
       return widget.customAdUnitId!;
     }
@@ -30,13 +32,14 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
   void initState() {
     super.initState();
     if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
-      _loadBannerAd();
+      _loadBannerAd(_primaryAdUnitId);
     }
   }
 
-  void _loadBannerAd() {
+  void _loadBannerAd(String adUnitId) {
+    _bannerAd?.dispose();
     _bannerAd = BannerAd(
-      adUnitId: _adUnitId,
+      adUnitId: adUnitId,
       size: AdSize.banner,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -48,11 +51,16 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
           }
         },
         onAdFailedToLoad: (ad, error) {
+          debugPrint('AdBannerWidget failed to load unit ($adUnitId): ${error.message} (code ${error.code})');
           ad.dispose();
           if (mounted) {
             setState(() {
               _isAdLoaded = false;
             });
+            if (!_isUsingFallback && adUnitId == _liveAndroidAdUnitId) {
+              _isUsingFallback = true;
+              _loadBannerAd(_testAndroidAdUnitId);
+            }
           }
         },
       ),
@@ -71,44 +79,43 @@ class _AdBannerWidgetState extends State<AdBannerWidget> {
     final theme = Theme.of(context);
 
     if (_isAdLoaded && _bannerAd != null) {
-      return Container(
-        height: 50,
-        width: double.infinity,
-        color: theme.colorScheme.secondaryContainer,
-        alignment: Alignment.center,
-        child: AdWidget(ad: _bannerAd!),
+      return SafeArea(
+        top: false,
+        child: Container(
+          height: 50,
+          width: double.infinity,
+          color: theme.colorScheme.secondaryContainer,
+          alignment: Alignment.center,
+          child: AdWidget(ad: _bannerAd!),
+        ),
       );
     }
 
     // Default Sponsored Content UI matching Lumia design specs
-    return Container(
-      height: 50,
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: theme.colorScheme.secondaryContainer,
-        border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(
-            'SPONSORED CONTENT',
-            style: theme.textTheme.labelSmall?.copyWith(
-              letterSpacing: 1.2,
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
+    return SafeArea(
+      top: false,
+      child: Container(
+        height: 50,
+        width: double.infinity,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.secondaryContainer,
+          border: Border(top: BorderSide(color: theme.colorScheme.outlineVariant)),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.ads_click, size: 16, color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7)),
+            const SizedBox(width: 8),
+            Text(
+              'SPONSORED ADVERTISEMENT',
+              style: theme.textTheme.labelSmall?.copyWith(
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.bold,
+                color: theme.colorScheme.onSecondaryContainer.withValues(alpha: 0.7),
+              ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            width: 32,
-            height: 14,
-            decoration: BoxDecoration(
-              color: theme.colorScheme.outlineVariant,
-              borderRadius: BorderRadius.circular(3),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

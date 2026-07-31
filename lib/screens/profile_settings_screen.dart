@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../providers/app_state.dart';
 import '../models/profile.dart';
+import '../widgets/ad_banner_widget.dart';
 
 class ProfileSettingsScreen extends StatefulWidget {
   final AppState appState;
@@ -12,6 +14,8 @@ class ProfileSettingsScreen extends StatefulWidget {
 }
 
 class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
+  static const _ringtoneChannel = MethodChannel('com.profileselector/ringtone_picker');
+
   final List<String> _ringtones = [
     'Nokia Tune',
     'Horizon',
@@ -28,6 +32,27 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
     'Silent',
   ];
 
+  Future<void> _pickNativeTone(AppState appState, String type) async {
+    try {
+      final result = await _ringtoneChannel.invokeMethod<Map>('pickRingtone', {'type': type});
+      if (result != null && result['title'] != null) {
+        final String toneName = result['title'].toString();
+        if (type == 'notification') {
+          appState.updateActiveMessageTone(toneName);
+        } else {
+          appState.updateActiveRingtone(toneName);
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      if (type == 'notification') {
+        _showFallbackMessageToneDialog(context, appState);
+      } else {
+        _showRingtoneDialog(context, appState, appState.activeProfile);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -43,59 +68,64 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
               icon: const Icon(Icons.arrow_back),
               onPressed: () => Navigator.pop(context),
             ),
-            title: const Text('Profile Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+            title: Text(
+              '${activeProfile.title} Settings',
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
+          bottomNavigationBar: const AdBannerWidget(),
           body: SingleChildScrollView(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Top Active Profile Selector Header
+                // Header Banner
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(20),
                   color: theme.colorScheme.surfaceContainerLow,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Row(
                     children: [
-                      Text(
-                        'ACTIVE PROFILE',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          letterSpacing: 1.2,
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primaryContainer,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          activeProfile.icon,
+                          color: theme.colorScheme.onPrimaryContainer,
+                          size: 32,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.surfaceContainerLowest,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                          border: Border(
-                            bottom: BorderSide(color: theme.colorScheme.primary, width: 2),
-                          ),
-                        ),
-                        child: DropdownButtonHideUnderline(
-                          child: DropdownButton<String>(
-                            value: activeProfile.id,
-                            isExpanded: true,
-                            items: appState.profiles.map((Profile p) {
-                              return DropdownMenuItem<String>(
-                                value: p.id,
-                                child: Text(p.title, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              );
-                            }).toList(),
-                            onChanged: (val) {
-                              if (val != null) appState.activateProfile(val);
-                            },
-                          ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              activeProfile.title.toUpperCase(),
+                              style: theme.textTheme.labelMedium?.copyWith(
+                                letterSpacing: 1.5,
+                                fontWeight: FontWeight.bold,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Customize audio, vibration, and alerts for this profile.',
+                              style: theme.textTheme.bodyMedium?.copyWith(
+                                color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
+
+                // Sound & Notification Section Header
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Text(
@@ -114,15 +144,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   color: theme.colorScheme.surfaceContainerLowest,
                   child: Column(
                     children: [
-                      // Ringtone Item
+                      // Ringtone Item (Native Selector)
                       ListTile(
                         leading: Icon(Icons.ring_volume, color: theme.colorScheme.primary),
                         title: const Text('Ringtone', style: TextStyle(fontWeight: FontWeight.w500)),
                         subtitle: Text(activeProfile.ringtoneName),
                         trailing: const Icon(Icons.chevron_right),
-                        onTap: () {
-                          _showRingtoneDialog(context, appState, activeProfile);
-                        },
+                        onTap: () => _pickNativeTone(appState, 'ringtone'),
                       ),
                       const Divider(height: 1, indent: 56),
 
@@ -179,52 +207,13 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       ),
                       const Divider(height: 1, indent: 56),
 
-                      // Message Alert Dropdown
-                      Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Icon(Icons.sms, color: theme.colorScheme.primary),
-                                const SizedBox(width: 16),
-                                const Text('Message Alert Sounds', style: TextStyle(fontWeight: FontWeight.w500)),
-                              ],
-                            ),
-                            const SizedBox(height: 8),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 40),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 12),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.surfaceContainerLow,
-                                  borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                                  border: Border(
-                                    bottom: BorderSide(color: theme.colorScheme.outline, width: 2),
-                                  ),
-                                ),
-                                child: DropdownButtonHideUnderline(
-                                  child: DropdownButton<String>(
-                                    value: _messageTones.contains(activeProfile.messageToneName)
-                                        ? activeProfile.messageToneName
-                                        : _messageTones[1],
-                                    isExpanded: true,
-                                    items: _messageTones.map((tone) {
-                                      return DropdownMenuItem<String>(
-                                        value: tone,
-                                        child: Text(tone),
-                                      );
-                                    }).toList(),
-                                    onChanged: (val) {
-                                      if (val != null) appState.updateActiveMessageTone(val);
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                      // Message Alert Tone (Native Selector)
+                      ListTile(
+                        leading: Icon(Icons.sms, color: theme.colorScheme.primary),
+                        title: const Text('Message Alert Tone', style: TextStyle(fontWeight: FontWeight.w500)),
+                        subtitle: Text(activeProfile.messageToneName),
+                        trailing: const Icon(Icons.chevron_right),
+                        onTap: () => _pickNativeTone(appState, 'notification'),
                       ),
                       const Divider(height: 1, indent: 56),
 
@@ -268,10 +257,10 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                       ),
                       const Divider(height: 1, indent: 56),
 
-                      // Message Alert Vibration Switch
+                      // Message Vibration Switch
                       SwitchListTile(
                         secondary: Icon(Icons.vibration, color: theme.colorScheme.primary),
-                        title: const Text('Message Alert Vibration', style: TextStyle(fontWeight: FontWeight.w500)),
+                        title: const Text('Message Vibration', style: TextStyle(fontWeight: FontWeight.w500)),
                         subtitle: const Text('Vibrate on incoming messages'),
                         value: activeProfile.isMessageVibrate,
                         activeThumbColor: theme.colorScheme.primary,
@@ -295,10 +284,14 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                         shape: BoxShape.circle,
                         border: Border.all(color: theme.colorScheme.primary, width: 4),
                       ),
-                      child: Icon(
-                        Icons.phonelink_setup,
-                        size: 48,
-                        color: theme.colorScheme.primary,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(48),
+                        child: Image.asset(
+                          'assets/images/app_logo.png',
+                          width: 48,
+                          height: 48,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                     ),
                   ),
@@ -323,6 +316,36 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
             return SimpleDialogOption(
               onPressed: () {
                 appState.updateActiveRingtone(tone);
+                Navigator.pop(ctx);
+              },
+              child: Row(
+                children: [
+                  Icon(
+                    isSelected ? Icons.radio_button_checked : Icons.radio_button_unchecked,
+                    color: isSelected ? Theme.of(context).colorScheme.primary : null,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(tone, style: TextStyle(fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+                ],
+              ),
+            );
+          }).toList(),
+        );
+      },
+    );
+  }
+
+  void _showFallbackMessageToneDialog(BuildContext context, AppState appState) {
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return SimpleDialog(
+          title: const Text('Select Message Alert Tone'),
+          children: _messageTones.map((tone) {
+            final isSelected = tone == appState.activeProfile.messageToneName;
+            return SimpleDialogOption(
+              onPressed: () {
+                appState.updateActiveMessageTone(tone);
                 Navigator.pop(ctx);
               },
               child: Row(

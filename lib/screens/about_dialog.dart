@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 class AboutAppDialog extends StatelessWidget {
   const AboutAppDialog({super.key});
@@ -99,12 +100,20 @@ class AboutAppDialog extends StatelessWidget {
                           color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                         ),
                       ),
-                      Text(
-                        '1.0.0-beta.2',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: theme.colorScheme.primary,
-                        ),
+                      FutureBuilder<PackageInfo>(
+                        future: PackageInfo.fromPlatform(),
+                        builder: (context, snapshot) {
+                          final versionStr = snapshot.hasData
+                              ? 'v${snapshot.data!.version} (${snapshot.data!.buildNumber})'
+                              : 'v1.0.0';
+                          return Text(
+                            versionStr,
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: theme.colorScheme.primary,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),

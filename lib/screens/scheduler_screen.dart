@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../providers/app_state.dart';
 import '../models/schedule_item.dart';
+import '../widgets/ad_banner_widget.dart';
 
 class SchedulerScreen extends StatefulWidget {
   final AppState appState;
@@ -29,13 +30,8 @@ class _SchedulerScreenState extends State<SchedulerScreen> {
               onPressed: () => Navigator.pop(context),
             ),
             title: const Text('Profiles', style: TextStyle(fontWeight: FontWeight.bold)),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.settings),
-                onPressed: () {},
-              ),
-            ],
           ),
+          bottomNavigationBar: const AdBannerWidget(),
           body: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
             child: Column(

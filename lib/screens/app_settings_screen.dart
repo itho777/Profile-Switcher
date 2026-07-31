@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import '../providers/app_state.dart';
+import '../widgets/ad_banner_widget.dart';
 import 'about_dialog.dart' as custom_about;
 
 class AppSettingsScreen extends StatelessWidget {
@@ -179,7 +181,15 @@ class AppSettingsScreen extends StatelessWidget {
                     children: [
                       ListTile(
                         title: const Text('Version'),
-                        subtitle: const Text('1.0.0-beta.2 (Build 2)'),
+                        subtitle: FutureBuilder<PackageInfo>(
+                          future: PackageInfo.fromPlatform(),
+                          builder: (context, snapshot) {
+                            final versionStr = snapshot.hasData
+                                ? '${snapshot.data!.version} (Build ${snapshot.data!.buildNumber})'
+                                : '1.0.0 (Build 1)';
+                            return Text(versionStr);
+                          },
+                        ),
                         trailing: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
@@ -271,6 +281,7 @@ class AppSettingsScreen extends StatelessWidget {
               ],
             ),
           ),
+          bottomNavigationBar: const AdBannerWidget(),
         );
       },
     );
