@@ -121,7 +121,7 @@ class AppState extends ChangeNotifier {
     Profile(
       id: 'silent',
       title: 'Silent',
-      description: 'Mutes all rings and alert sounds completely.',
+      description: 'All sounds muted. Vibration alerts still active.',
       icon: Icons.notifications_off_outlined,
       activeIcon: Icons.notifications_off,
       ringtoneVolume: 0,
@@ -132,17 +132,17 @@ class AppState extends ChangeNotifier {
       messageToneName: 'Nokia SMS',
       messageToneSource: 'preloaded',
       messageTonePath: 'assets/audio/nokia_sms.mp3',
-      isRingtoneVibrate: false,
-      isMessageVibrate: false,
+      isRingtoneVibrate: true,
+      isMessageVibrate: true,
     ),
     Profile(
       id: 'pager',
       title: 'Pager',
-      description: 'Configures specific alert tones mimicking pager notifications.',
+      description: 'Low-volume pager-style single beep alerts for calls and messages.',
       icon: Icons.cell_tower_outlined,
       activeIcon: Icons.cell_tower,
-      ringtoneVolume: 80,
-      messageVolume: 80,
+      ringtoneVolume: 30,
+      messageVolume: 30,
       ringtoneName: 'Beep Once',
       ringtoneSource: 'preloaded',
       ringtonePath: 'assets/audio/beep_once_ring_tone.mp3',
@@ -155,18 +155,18 @@ class AppState extends ChangeNotifier {
     Profile(
       id: 'discreet',
       title: 'Discreet',
-      description: 'Alternative muted or low-vibration.',
+      description: 'Minimum volume with vibration. Single beep tone, quiet keypad.',
       icon: Icons.vibration_outlined,
       activeIcon: Icons.vibration,
-      ringtoneVolume: 30,
-      messageVolume: 30,
-      ringtoneName: 'Nokia Standard',
+      ringtoneVolume: 20,
+      messageVolume: 20,
+      ringtoneName: 'Beep Once',
       ringtoneSource: 'preloaded',
-      ringtonePath: 'assets/audio/nokia_standard.mp3',
-      messageToneName: 'Nokia Standard',
+      ringtonePath: 'assets/audio/beep_once_ring_tone.mp3',
+      messageToneName: 'Beep Once',
       messageToneSource: 'preloaded',
-      messageTonePath: 'assets/audio/nokia_standard.mp3',
-      isRingtoneVibrate: false,
+      messageTonePath: 'assets/audio/beep_once_ring_tone.mp3',
+      isRingtoneVibrate: true,
       isMessageVibrate: true,
     ),
   ];
@@ -530,6 +530,72 @@ class AppState extends ChangeNotifier {
     notifyListeners();
   }
 
+  // Factory default settings for each profile (used by resetProfileToDefault)
+  static final Map<String, Map<String, dynamic>> _factoryDefaults = {
+    'normal': {
+      'ringtoneVolume': 70, 'messageVolume': 70,
+      'ringtoneName': 'Nokia Ring Tone', 'ringtoneSource': 'preloaded', 'ringtonePath': 'assets/audio/nokia_ring_tone.mp3',
+      'messageToneName': 'Nokia SMS', 'messageToneSource': 'preloaded', 'messageTonePath': 'assets/audio/nokia_sms.mp3',
+      'isRingtoneVibrate': true, 'isMessageVibrate': true,
+    },
+    'outdoor': {
+      'ringtoneVolume': 100, 'messageVolume': 100,
+      'ringtoneName': 'Nokia Ring Tone', 'ringtoneSource': 'preloaded', 'ringtonePath': 'assets/audio/nokia_ring_tone.mp3',
+      'messageToneName': 'Nokia SMS', 'messageToneSource': 'preloaded', 'messageTonePath': 'assets/audio/nokia_sms.mp3',
+      'isRingtoneVibrate': true, 'isMessageVibrate': true,
+    },
+    'meeting': {
+      'ringtoneVolume': 30, 'messageVolume': 30,
+      'ringtoneName': 'Beep Once', 'ringtoneSource': 'preloaded', 'ringtonePath': 'assets/audio/beep_once_ring_tone.mp3',
+      'messageToneName': 'Nokia SMS', 'messageToneSource': 'preloaded', 'messageTonePath': 'assets/audio/nokia_sms.mp3',
+      'isRingtoneVibrate': true, 'isMessageVibrate': true,
+    },
+    'silent': {
+      'ringtoneVolume': 0, 'messageVolume': 0,
+      'ringtoneName': 'Nokia Ring Tone', 'ringtoneSource': 'preloaded', 'ringtonePath': 'assets/audio/nokia_ring_tone.mp3',
+      'messageToneName': 'Nokia SMS', 'messageToneSource': 'preloaded', 'messageTonePath': 'assets/audio/nokia_sms.mp3',
+      'isRingtoneVibrate': true, 'isMessageVibrate': true,
+    },
+    'pager': {
+      'ringtoneVolume': 30, 'messageVolume': 30,
+      'ringtoneName': 'Beep Once', 'ringtoneSource': 'preloaded', 'ringtonePath': 'assets/audio/beep_once_ring_tone.mp3',
+      'messageToneName': 'Beep Once', 'messageToneSource': 'preloaded', 'messageTonePath': 'assets/audio/beep_once_ring_tone.mp3',
+      'isRingtoneVibrate': true, 'isMessageVibrate': true,
+    },
+    'discreet': {
+      'ringtoneVolume': 20, 'messageVolume': 20,
+      'ringtoneName': 'Beep Once', 'ringtoneSource': 'preloaded', 'ringtonePath': 'assets/audio/beep_once_ring_tone.mp3',
+      'messageToneName': 'Beep Once', 'messageToneSource': 'preloaded', 'messageTonePath': 'assets/audio/beep_once_ring_tone.mp3',
+      'isRingtoneVibrate': true, 'isMessageVibrate': true,
+    },
+  };
+
+  /// Resets a single profile back to its factory defaults without affecting other profiles
+  void resetProfileToDefault(String profileId) {
+    final defaults = _factoryDefaults[profileId];
+    if (defaults == null) return;
+    final index = _profiles.indexWhere((p) => p.id == profileId);
+    if (index == -1) return;
+
+    _profiles[index] = _profiles[index].copyWith(
+      ringtoneVolume: defaults['ringtoneVolume'] as int,
+      messageVolume: defaults['messageVolume'] as int,
+      ringtoneName: defaults['ringtoneName'] as String,
+      ringtoneSource: defaults['ringtoneSource'] as String,
+      ringtonePath: defaults['ringtonePath'] as String,
+      messageToneName: defaults['messageToneName'] as String,
+      messageToneSource: defaults['messageToneSource'] as String,
+      messageTonePath: defaults['messageTonePath'] as String,
+      isRingtoneVibrate: defaults['isRingtoneVibrate'] as bool,
+      isMessageVibrate: defaults['isMessageVibrate'] as bool,
+    );
+    _saveProfilesToStorage();
+    if (_profiles[index].isActive) {
+      _applyHardwareSettings(_profiles[index]);
+    }
+    notifyListeners();
+  }
+
   void resetToDefaults() {
     _themeMode = ThemeMode.system;
     _fontSizeIndex = 2;
@@ -538,10 +604,16 @@ class AppState extends ChangeNotifier {
     _hardwareSyncEnabled = true;
     _cancelTimedActivation();
     stopTestSound();
+    // Restore all profiles to factory defaults
+    for (final profileId in _factoryDefaults.keys) {
+      resetProfileToDefault(profileId);
+    }
+    // Reset active profile to Normal
     for (var p in _profiles) {
       p.isActive = (p.id == 'normal');
     }
     _saveProfilesToStorage();
+    _saveActiveProfileId('normal');
     _applyHardwareSettings(activeProfile);
     notifyListeners();
   }

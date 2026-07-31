@@ -619,6 +619,57 @@ class _ProfileSettingsScreenState extends State<ProfileSettingsScreen> {
                   ),
                 ),
 
+                const SizedBox(height: 24),
+
+                // Reset This Profile to Default Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.restore, size: 18),
+                    label: Text('Reset ${profile.title} Profile to Default'),
+                    style: OutlinedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 46),
+                      foregroundColor: theme.colorScheme.error,
+                      side: BorderSide(color: theme.colorScheme.error.withValues(alpha: 0.5)),
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (ctx) => AlertDialog(
+                          title: Text('Reset ${profile.title} Profile?'),
+                          content: Text(
+                            'This will restore the ${profile.title} profile\'s factory default '
+                            'volumes, tones, and vibration settings.\n\nYour other profiles will not be affected.',
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(ctx),
+                              child: const Text('CANCEL'),
+                            ),
+                            FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: theme.colorScheme.error,
+                              ),
+                              onPressed: () {
+                                appState.stopTestSound();
+                                appState.resetProfileToDefault(profile.id);
+                                Navigator.pop(ctx);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text('${profile.title} profile reset to defaults.'),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                              child: const Text('RESET'),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+
                 const SizedBox(height: 40),
               ],
             ),
