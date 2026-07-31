@@ -3,7 +3,7 @@
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
     <application
-        android:label="profile_selector_app"
+        android:label="Profile Switcher"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

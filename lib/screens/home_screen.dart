@@ -33,7 +33,7 @@ class HomeScreen extends StatelessWidget {
               },
             ),
             title: Text(
-              'Profiles',
+              'Profile Switcher',
               style: theme.textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.bold,
                 color: theme.colorScheme.primary,

@@ -35,7 +35,7 @@ class _ProfileSelectorAppState extends State<ProfileSelectorApp> {
       listenable: _appState,
       builder: (context, _) {
         return MaterialApp(
-          title: 'Profile Selector',
+          title: 'Profile Switcher',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
