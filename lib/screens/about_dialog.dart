@@ -37,13 +37,17 @@ class AboutAppDialog extends StatelessWidget {
               ),
               child: Stack(
                 children: [
-                  Positioned.fill(
-                    child: Opacity(
-                      opacity: 0.15,
-                      child: Icon(
-                        Icons.phonelink_setup,
-                        size: 100,
-                        color: theme.colorScheme.onPrimaryContainer,
+                  Positioned(
+                    right: 16,
+                    top: 16,
+                    bottom: 16,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.asset(
+                        'assets/images/app_logo.png',
+                        height: 70,
+                        width: 70,
+                        fit: BoxFit.cover,
                       ),
                     ),
                   ),
