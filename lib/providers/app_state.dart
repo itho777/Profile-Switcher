@@ -261,23 +261,24 @@ class AppState extends ChangeNotifier {
       final ringtoneRes = await _ringtoneChannel.invokeMethod<Map>('getDefaultRingtone');
       final notifRes = await _ringtoneChannel.invokeMethod<Map>('getDefaultNotificationTone');
 
-      final idx = _profiles.indexWhere((p) => p.id == 'normal');
-      if (idx != -1) {
-        String ringTitle = ringtoneRes?['title'] ?? 'Phone Default Ringtone';
-        String ringUri = ringtoneRes?['uri'] ?? '';
-        String notifTitle = notifRes?['title'] ?? 'Phone Default Message Tone';
-        String notifUri = notifRes?['uri'] ?? '';
+      String ringTitle = ringtoneRes?['title'] ?? 'Phone Default Ringtone';
+      String ringUri = ringtoneRes?['uri'] ?? '';
+      String notifTitle = notifRes?['title'] ?? 'Phone Default Message Tone';
+      String notifUri = notifRes?['uri'] ?? '';
 
-        _profiles[idx] = _profiles[idx].copyWith(
-          ringtoneName: ringTitle,
-          ringtoneSource: 'phone',
-          ringtonePath: ringUri,
-          messageToneName: notifTitle,
-          messageToneSource: 'phone',
-          messageTonePath: notifUri,
-          ringtoneVolume: 70,
-          messageVolume: 70,
-        );
+      // All profiles except meeting, pager, discreet use the phone's initial default tones
+      for (var id in ['normal', 'outdoor', 'silent']) {
+        final idx = _profiles.indexWhere((p) => p.id == id);
+        if (idx != -1) {
+          _profiles[idx] = _profiles[idx].copyWith(
+            ringtoneName: ringTitle,
+            ringtoneSource: 'phone',
+            ringtonePath: ringUri,
+            messageToneName: notifTitle,
+            messageToneSource: 'phone',
+            messageTonePath: notifUri,
+          );
+        }
       }
     } catch (e) {
       debugPrint("Error detecting system defaults: $e");
@@ -570,25 +571,41 @@ class AppState extends ChangeNotifier {
     },
   };
 
-  /// Resets a single profile back to its factory defaults without affecting other profiles
+  /// Resets a single profile back to default:
+  /// - 'normal', 'outdoor', 'silent': resets volume & vibration settings only (tones remain untouched).
+  /// - 'meeting', 'pager', 'discreet': resets volume, vibration, AND restores preset tones ('Beep Once').
   void resetProfileToDefault(String profileId) {
     final defaults = _factoryDefaults[profileId];
     if (defaults == null) return;
     final index = _profiles.indexWhere((p) => p.id == profileId);
     if (index == -1) return;
 
-    _profiles[index] = _profiles[index].copyWith(
-      ringtoneVolume: defaults['ringtoneVolume'] as int,
-      messageVolume: defaults['messageVolume'] as int,
-      ringtoneName: defaults['ringtoneName'] as String,
-      ringtoneSource: defaults['ringtoneSource'] as String,
-      ringtonePath: defaults['ringtonePath'] as String,
-      messageToneName: defaults['messageToneName'] as String,
-      messageToneSource: defaults['messageToneSource'] as String,
-      messageTonePath: defaults['messageTonePath'] as String,
-      isRingtoneVibrate: defaults['isRingtoneVibrate'] as bool,
-      isMessageVibrate: defaults['isMessageVibrate'] as bool,
-    );
+    final isTonePreservedOnReset = (profileId == 'normal' || profileId == 'outdoor' || profileId == 'silent');
+
+    if (isTonePreservedOnReset) {
+      // Reset volume and vibrate settings only (ringtone / message tone selection preserved)
+      _profiles[index] = _profiles[index].copyWith(
+        ringtoneVolume: defaults['ringtoneVolume'] as int,
+        messageVolume: defaults['messageVolume'] as int,
+        isRingtoneVibrate: defaults['isRingtoneVibrate'] as bool,
+        isMessageVibrate: defaults['isMessageVibrate'] as bool,
+      );
+    } else {
+      // Reset volume, vibrate, AND tones to factory presets
+      _profiles[index] = _profiles[index].copyWith(
+        ringtoneVolume: defaults['ringtoneVolume'] as int,
+        messageVolume: defaults['messageVolume'] as int,
+        ringtoneName: defaults['ringtoneName'] as String,
+        ringtoneSource: defaults['ringtoneSource'] as String,
+        ringtonePath: defaults['ringtonePath'] as String,
+        messageToneName: defaults['messageToneName'] as String,
+        messageToneSource: defaults['messageToneSource'] as String,
+        messageTonePath: defaults['messageTonePath'] as String,
+        isRingtoneVibrate: defaults['isRingtoneVibrate'] as bool,
+        isMessageVibrate: defaults['isMessageVibrate'] as bool,
+      );
+    }
+
     _saveProfilesToStorage();
     if (_profiles[index].isActive) {
       _applyHardwareSettings(_profiles[index]);
