@@ -48,6 +48,19 @@ jobs:
           touch android/local.properties
           echo "flutter.minSdkVersion=21" >> android/local.properties
 
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/profile-switcher.jks
+
+      - name: Write key.properties
+        run: |
+          cat > android/key.properties <<EOF
+          storePassword=${{ secrets.KEYSTORE_PASSWORD }}
+          keyPassword=${{ secrets.KEY_PASSWORD }}
+          keyAlias=${{ secrets.KEY_ALIAS }}
+          storeFile=profile-switcher.jks
+          EOF
+
       - name: Install dependencies
         run: flutter pub get
 
