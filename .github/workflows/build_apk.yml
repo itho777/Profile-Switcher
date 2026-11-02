@@ -1,4 +1,4 @@
-name: Build & Release Android APK
+name: Build & Release Android
 
 on:
   push:
@@ -17,7 +17,7 @@ permissions:
 
 jobs:
   build:
-    name: Build Android APK
+    name: Build Android APK + AAB
     runs-on: ubuntu-latest
 
     steps:
@@ -53,27 +53,35 @@ jobs:
 
       - name: Build Android Release APK
         id: build_apk
-        run: flutter build apk --release 2>&1 | tee /tmp/flutter_build.log; exit ${PIPESTATUS[0]}
+        run: flutter build apk --release 2>&1 | tee /tmp/flutter_build_apk.log; exit ${PIPESTATUS[0]}
+
+      - name: Build Android Release AAB
+        id: build_aab
+        run: flutter build appbundle --release 2>&1 | tee /tmp/flutter_build_aab.log; exit ${PIPESTATUS[0]}
 
       - name: Dump build log on failure
         if: failure()
         run: |
-          echo "## ❌ Flutter Build Error" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          grep -E -A3 "(error:|FAILURE|Exception|Caused by|BUILD FAILED|What went wrong|> Task|Could not)" /tmp/flutter_build.log | tail -120 >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Last 100 lines of raw log:" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          tail -100 /tmp/flutter_build.log >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          for log in /tmp/flutter_build_apk.log /tmp/flutter_build_aab.log; do
+            [ -f "$log" ] || continue
+            echo "## ❌ Build Error: $log" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            grep -E -A3 "(error:|FAILURE|Exception|Caused by|BUILD FAILED|What went wrong|> Task|Could not)" "$log" | tail -120 >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            echo "### Last 100 lines:" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+            tail -100 "$log" >> $GITHUB_STEP_SUMMARY
+            echo '```' >> $GITHUB_STEP_SUMMARY
+          done
 
-      - name: Upload build log artifact
+      - name: Upload build logs
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: android-build-log
-          path: /tmp/flutter_build.log
+          name: android-build-logs
+          path: |
+            /tmp/flutter_build_apk.log
+            /tmp/flutter_build_aab.log
           retention-days: 7
 
       - name: Upload APK Artifact
@@ -83,10 +91,19 @@ jobs:
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 14
 
+      - name: Upload AAB Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: profile-switcher-release-aab
+          path: build/app/outputs/bundle/release/app-release.aab
+          retention-days: 14
+
       - name: Create Release for Tag
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: build/app/outputs/flutter-apk/app-release.apk
-          prerelease: true
+          files: |
+            build/app/outputs/flutter-apk/app-release.apk
+            build/app/outputs/bundle/release/app-release.aab
+          prerelease: ${{ contains(github.ref, 'beta') || contains(github.ref, 'alpha') }}
           generate_release_notes: true
