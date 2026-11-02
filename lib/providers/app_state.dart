@@ -29,7 +29,7 @@ final List<PreloadedTone> preloadedMessageTones = const [
 ];
 
 class AppState extends ChangeNotifier {
-  static const _ringtoneChannel = MethodChannel('com.profileselector/ringtone_picker');
+  static const _ringtoneChannel = MethodChannel('id.broadandbright.profileswitcher/ringtone_picker');
 
   ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;

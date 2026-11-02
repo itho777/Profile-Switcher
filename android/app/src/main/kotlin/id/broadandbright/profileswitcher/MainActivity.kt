@@ -1,4 +1,4 @@
-package com.profileselector.profile_selector_app
+package id.broadandbright.profileswitcher
 
 import android.app.Activity
 import android.content.Intent
@@ -11,7 +11,7 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
-    private val CHANNEL = "com.profileselector/ringtone_picker"
+    private val CHANNEL = "id.broadandbright.profileswitcher/ringtone_picker"
     private val RINGTONE_PICKER_REQUEST = 999
     private var pendingResult: MethodChannel.Result? = null
     private var currentPlayingRingtone: Ringtone? = null
