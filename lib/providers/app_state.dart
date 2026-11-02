@@ -238,6 +238,8 @@ class AppState extends ChangeNotifier {
           p.isActive = (p.id == 'normal');
         }
         await prefs.setString('saved_active_profile_id', 'normal');
+        // Save once so user edits on subsequent runs load from storage correctly
+        await _saveProfilesToStorage();
       } else {
         // Restore the last active profile the user chose
         final String savedId = prefs.getString('saved_active_profile_id') ?? 'normal';
@@ -246,9 +248,11 @@ class AppState extends ChangeNotifier {
         for (var p in _profiles) {
           p.isActive = (p.id == restoreId);
         }
+        // No re-save on subsequent runs — profiles already loaded from storage.
+        // Re-saving here would overwrite user edits with stale in-memory defaults
+        // if any async timing edge case occurs during load.
       }
 
-      _saveProfilesToStorage();
       _applyHardwareSettings(activeProfile);
     } catch (e) {
       debugPrint("Error initializing AppState storage: $e");
