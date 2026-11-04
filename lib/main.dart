@@ -8,7 +8,8 @@ import 'screens/home_screen.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
-    await MobileAds.instance.initialize();
+    // Fire-and-forget — don't block runApp waiting for AdMob SDK init
+    MobileAds.instance.initialize();
   }
   runApp(const ProfileSelectorApp());
 }

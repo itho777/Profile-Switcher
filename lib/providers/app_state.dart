@@ -31,6 +31,10 @@ final List<PreloadedTone> preloadedMessageTones = const [
 class AppState extends ChangeNotifier {
   static const _ringtoneChannel = MethodChannel('id.broadandbright.profileswitcher/ringtone_picker');
 
+  SharedPreferences? _prefs;
+  bool _isLoaded = false;
+  bool get isLoaded => _isLoaded;
+
   ThemeMode _themeMode = ThemeMode.system;
   ThemeMode get themeMode => _themeMode;
 
@@ -212,7 +216,8 @@ class AppState extends ChangeNotifier {
 
   Future<void> _initStorage() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      _prefs = await SharedPreferences.getInstance();
+      final prefs = _prefs!;
       final bool isFirstRun = prefs.getBool('is_first_run') ?? true;
 
       if (prefs.containsKey('profiles_json')) {
@@ -253,10 +258,12 @@ class AppState extends ChangeNotifier {
         // if any async timing edge case occurs during load.
       }
 
-      _applyHardwareSettings(activeProfile);
+      // Don't apply hardware settings on cold load — only apply when user switches profile.
+      // Avoids slow platform channel calls on startup.
     } catch (e) {
       debugPrint("Error initializing AppState storage: $e");
     }
+    _isLoaded = true;
     notifyListeners();
   }
 
@@ -291,7 +298,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _saveProfilesToStorage() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = _prefs ?? await SharedPreferences.getInstance();
       final encoded = jsonEncode(_profiles.map((p) => p.toJson()).toList());
       await prefs.setString('profiles_json', encoded);
     } catch (e) {
@@ -463,7 +470,7 @@ class AppState extends ChangeNotifier {
 
   Future<void> _saveActiveProfileId(String profileId) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = _prefs ?? await SharedPreferences.getInstance();
       await prefs.setString('saved_active_profile_id', profileId);
     } catch (e) {
       debugPrint("Error saving active profile id: $e");

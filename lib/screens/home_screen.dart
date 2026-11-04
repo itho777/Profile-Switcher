@@ -19,6 +19,13 @@ class HomeScreen extends StatelessWidget {
     return ListenableBuilder(
       listenable: appState,
       builder: (context, _) {
+        // Wait for storage to load before rendering — avoids flash of default state
+        if (!appState.isLoaded) {
+          return Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        }
+
         final activeProfile = appState.activeProfile;
 
         return Scaffold(
