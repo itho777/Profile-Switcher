@@ -1,4 +1,4 @@
-# profile_selector_app
+# Profile-Switcher
 
 A new Flutter project.
 
