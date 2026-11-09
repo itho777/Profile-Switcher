@@ -1,28 +1,40 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart' hide AppState;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'providers/app_state.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Pre-warm SharedPreferences and AdMob in parallel before runApp
+  final prefsFeature = SharedPreferences.getInstance();
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
-    // Fire-and-forget — don't block runApp waiting for AdMob SDK init
-    MobileAds.instance.initialize();
+    MobileAds.instance.initialize(); // fire-and-forget
   }
-  runApp(const ProfileSelectorApp());
+  final prefs = await prefsFeature; // wait only for prefs — fast disk read
+
+  runApp(ProfileSelectorApp(prefs: prefs));
 }
 
 class ProfileSelectorApp extends StatefulWidget {
-  const ProfileSelectorApp({super.key});
+  final SharedPreferences prefs;
+  const ProfileSelectorApp({super.key, required this.prefs});
 
   @override
   State<ProfileSelectorApp> createState() => _ProfileSelectorAppState();
 }
 
 class _ProfileSelectorAppState extends State<ProfileSelectorApp> {
-  final AppState _appState = AppState();
+  late final AppState _appState;
+
+  @override
+  void initState() {
+    super.initState();
+    _appState = AppState(prefs: widget.prefs);
+  }
 
   @override
   void dispose() {

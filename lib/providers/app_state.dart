@@ -210,13 +210,13 @@ class AppState extends ChangeNotifier {
 
   List<ScheduleItem> get schedules => List.unmodifiable(_schedules);
 
-  AppState() {
+  AppState({required SharedPreferences prefs}) {
+    _prefs = prefs;
     _initStorage();
   }
 
   Future<void> _initStorage() async {
     try {
-      _prefs = await SharedPreferences.getInstance();
       final prefs = _prefs!;
       final bool isFirstRun = prefs.getBool('is_first_run') ?? true;
 
