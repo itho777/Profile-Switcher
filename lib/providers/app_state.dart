@@ -216,6 +216,8 @@ class AppState extends ChangeNotifier {
   }
 
   Future<void> _initStorage() async {
+    // Run actual init and minimum splash duration in parallel
+    final minSplash = Future.delayed(const Duration(milliseconds: 700));
     try {
       final prefs = _prefs!;
       final bool isFirstRun = prefs.getBool('is_first_run') ?? true;
@@ -263,6 +265,7 @@ class AppState extends ChangeNotifier {
     } catch (e) {
       debugPrint("Error initializing AppState storage: $e");
     }
+    await minSplash; // ensure splash plays for at least 700ms
     _isLoaded = true;
     notifyListeners();
   }
