@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart' hide AppState;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
@@ -7,14 +8,15 @@ import 'providers/app_state.dart';
 import 'screens/home_screen.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  final binding = WidgetsFlutterBinding.ensureInitialized();
+  FlutterNativeSplash.preserve(widgetsBinding: binding);
 
-  // Pre-warm SharedPreferences and AdMob in parallel before runApp
+  // Pre-warm SharedPreferences and AdMob in parallel
   final prefsFeature = SharedPreferences.getInstance();
   if (!kIsWeb && (defaultTargetPlatform == TargetPlatform.android || defaultTargetPlatform == TargetPlatform.iOS)) {
     MobileAds.instance.initialize(); // fire-and-forget
   }
-  final prefs = await prefsFeature; // wait only for prefs — fast disk read
+  final prefs = await prefsFeature;
 
   runApp(ProfileSelectorApp(prefs: prefs));
 }
@@ -34,10 +36,19 @@ class _ProfileSelectorAppState extends State<ProfileSelectorApp> {
   void initState() {
     super.initState();
     _appState = AppState(prefs: widget.prefs);
+    _appState.addListener(_onAppStateLoaded);
+  }
+
+  void _onAppStateLoaded() {
+    if (_appState.isLoaded) {
+      FlutterNativeSplash.remove();
+      _appState.removeListener(_onAppStateLoaded);
+    }
   }
 
   @override
   void dispose() {
+    _appState.removeListener(_onAppStateLoaded);
     _appState.dispose();
     super.dispose();
   }
