@@ -7,22 +7,38 @@ import 'profile_options_dialog.dart';
 import 'app_settings_screen.dart';
 import 'scheduler_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   final AppState appState;
 
   const HomeScreen({super.key, required this.appState});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  bool _splashDone = false;
+
+  void _onSplashDone() {
+    if (mounted) setState(() => _splashDone = true);
+  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
     return ListenableBuilder(
-      listenable: appState,
+      listenable: widget.appState,
       builder: (context, _) {
-        // Wait for storage to load before rendering — avoids flash of default state
-        if (!appState.isLoaded) {
-          return const _SplashScreen();
+        // Show splash until both: data loaded AND minimum splash time elapsed
+        if (!_splashDone) {
+          return _SplashScreen(
+            appState: widget.appState,
+            onDone: _onSplashDone,
+          );
         }
+
+        final appState = widget.appState;
 
         final activeProfile = appState.activeProfile;
 
@@ -315,7 +331,10 @@ class HomeScreen extends StatelessWidget {
 }
 
 class _SplashScreen extends StatefulWidget {
-  const _SplashScreen();
+  final AppState appState;
+  final VoidCallback onDone;
+
+  const _SplashScreen({required this.appState, required this.onDone});
 
   @override
   State<_SplashScreen> createState() => _SplashScreenState();
@@ -326,23 +345,50 @@ class _SplashScreenState extends State<_SplashScreen>
   late final AnimationController _ctrl;
   late final Animation<double> _progress;
 
+  static const _minDuration = Duration(milliseconds: 700);
+  bool _minElapsed = false;
+
   @override
   void initState() {
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1800),
+      duration: const Duration(milliseconds: 1200),
     );
-    // Ease to ~85% quickly then slow — real load completes and flips isLoaded
     _progress = CurvedAnimation(
       parent: _ctrl,
-      curve: const Interval(0.0, 1.0, curve: Curves.easeOutExpo),
+      curve: Curves.easeOutCubic,
     );
-    _ctrl.animateTo(0.85);
+
+    // Animate to 80% immediately — shows life even if load is fast
+    _ctrl.animateTo(0.80, duration: const Duration(milliseconds: 500));
+
+    // Minimum display time so splash is always visible
+    Future.delayed(_minDuration, () {
+      if (!mounted) return;
+      _minElapsed = true;
+      _maybeFinish();
+    });
+
+    // Watch for load completion
+    widget.appState.addListener(_onLoadChanged);
+  }
+
+  void _onLoadChanged() {
+    if (widget.appState.isLoaded) _maybeFinish();
+  }
+
+  void _maybeFinish() {
+    if (!_minElapsed || !widget.appState.isLoaded) return;
+    // Animate to 100% then dismiss
+    _ctrl.animateTo(1.0, duration: const Duration(milliseconds: 180)).then((_) {
+      if (mounted) widget.onDone();
+    });
   }
 
   @override
   void dispose() {
+    widget.appState.removeListener(_onLoadChanged);
     _ctrl.dispose();
     super.dispose();
   }
