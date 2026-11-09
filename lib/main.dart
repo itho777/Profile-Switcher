@@ -37,6 +37,10 @@ class _ProfileSelectorAppState extends State<ProfileSelectorApp> {
     super.initState();
     _appState = AppState(prefs: widget.prefs);
     _appState.addListener(_onAppStateLoaded);
+    // If already loaded (sync init), remove splash immediately
+    if (_appState.isLoaded) {
+      FlutterNativeSplash.remove();
+    }
   }
 
   void _onAppStateLoaded() {
