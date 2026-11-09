@@ -21,9 +21,7 @@ class HomeScreen extends StatelessWidget {
       builder: (context, _) {
         // Wait for storage to load before rendering — avoids flash of default state
         if (!appState.isLoaded) {
-          return Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
+          return const _SplashScreen();
         }
 
         final activeProfile = appState.activeProfile;
@@ -313,5 +311,81 @@ class HomeScreen extends StatelessWidget {
       return '${hrs}h ${mins}m';
     }
     return '${mins}m ${secs}s';
+  }
+}
+
+class _SplashScreen extends StatefulWidget {
+  const _SplashScreen();
+
+  @override
+  State<_SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<_SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _progress;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    );
+    // Ease to ~85% quickly then slow — real load completes and flips isLoaded
+    _progress = CurvedAnimation(
+      parent: _ctrl,
+      curve: const Interval(0.0, 1.0, curve: Curves.easeOutExpo),
+    );
+    _ctrl.animateTo(0.85);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 48),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.tune_rounded,
+                  size: 48, color: theme.colorScheme.primary),
+              const SizedBox(height: 24),
+              Text(
+                'Profile Switcher',
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 32),
+              AnimatedBuilder(
+                animation: _progress,
+                builder: (context, _) => ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: _progress.value,
+                    minHeight: 4,
+                    backgroundColor:
+                        theme.colorScheme.surfaceContainerHighest,
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.primary),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
